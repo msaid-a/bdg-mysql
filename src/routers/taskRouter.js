@@ -1,11 +1,32 @@
 const conn = require('../connection/index')
 const router = require('express').Router()
 
-// Get All Atask
+// Get All task
+router.get('/tasks', (req,res) => {
+    let sql = `SELECT *  FROM task`
+    conn.query(sql, (err, result) => {
+        if(err) return res.send(err.sqlMessage)
+        res.send(result)
+    })
+})
 
-// Get All on task
+// Get All own task
+router.get('/tasks/:userid', (req,res)=>{
+    let sql = `SELECT * FROM task WHERE user_id ='${req.params.userid}'`
+    conn.query(sql, (err,result)=>{
+        if(err) return res.send(err.sqlMessage)
+        res.send(result)
+    })
+})
 
 // Get Task By ID
+router.get('/task/:idtask', (req,res)=>{
+    let sql = `SELECT * FROM task WHERE id=${req.params.idtask}`
+    conn.query(sql, (err,result) =>{
+        if(err) return res.send(err)
+        res.send(result)
+    })
+})
 
 // Create task
 router.post('/tasks', (req,res) => {
@@ -22,8 +43,26 @@ router.post('/tasks', (req,res) => {
     })
 })
 // Update Task
+router.patch('/task/:idtask', (req,res) =>{
+    let sql = `UPDATE task SET ? WHERE id = ?`
+    let data = [req.body, req.params.idtask]
+        data[0].complate = true
+        
+    conn.query(sql, data, (err,result) => {
+        if(err) return res.send(err.sqlMessage)
+        res.send(result)
+    })
+})
+
 
 // Detele Task
+router.delete('/task/:idtask', (req,res) => {
+    let sql = `DELETE FROM task WHERE id = ${req.params.idtask}`
+    conn.query(sql, (err,result) => {
+        if(err) return res.send(err)
+        res.send(result)
+    })
+})
 
 
 module.exports = router
