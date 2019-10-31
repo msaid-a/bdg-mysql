@@ -4,7 +4,7 @@ const conn = mysql.createConnection({
     user: 'root',
     password:'Indonesiaku!',
     host:'localhost',
-    database:'bdg-mysql',
+    database:'bdg_mysql',
     port : 3306
 })
 
