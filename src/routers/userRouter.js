@@ -4,6 +4,7 @@ const validator = require('validator')
 const bcryptjs = require('bcryptjs')
 const multer = require('multer')
 const path = require('path')
+const fs = require('fs')
 // const nodemailer = require('nodemailer')
 const sendMail = require('../email/nodemailer')
 const uploadDirectory = path.join(__dirname,'../../public/uploads')
@@ -52,6 +53,22 @@ router.post('/avatar/:userid',upload.single('avatar'), (req,res)=>{
 
 }, (err,req,res,next)=>{
     if(err) return res.send(err)
+})
+
+// get Avatar 
+router.get('/avatar/:fileName', (req,res)=>{
+    // letak folder
+    let letak = {
+        root : uploadDirectory
+    }
+    // nama File
+    let fileName = req.params.fileName
+
+
+    res.sendFile(fileName, letak, function(err){
+        if(err) return res.send(err)
+    })
+
 })
 
 
