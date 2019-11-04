@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer')
 const config = require('./config')
 
 
-let sendMail = (email) =>{
+let sendMail = (data) =>{
 
 
 let transpoter = nodemailer.createTransport({
@@ -18,9 +18,10 @@ let transpoter = nodemailer.createTransport({
 
 let mail = {
     from : 'Muhammad Said Arrafi <muhammadsaidarrafi@gmail.com>',
-    to: email,
+    to: data.email,
     subject: 'Selamat Datang',
-    html:`<h1> Hello gengs</h1>`
+    html:`<h1> Hello, Welcome ${data.name}</h1>
+    <a href="http://localhost:2222/verifivation/${data.username}">Click Here to verification</a>`
 }
 
 transpoter.sendMail(mail, (err,result)=>{
