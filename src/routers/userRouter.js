@@ -16,7 +16,7 @@ const _storage = multer.diskStorage({
         cb(null,uploadDirectory)
     },
     filename: function(req,file,cb){
-        cb(null, Date.now()+file.fieldname + path.extname(file.originalname))
+        cb(null, Date.now()+`-${req.params.userid}-${file.fieldname}` + path.extname(file.originalname))
     }
 })
 
@@ -34,7 +34,7 @@ const upload = multer({
         callback(null, true)
     }
 })
-// POST AVATAR
+// POST AVATAR v1
 router.post('/avatar/:userid',upload.single('avatar'), (req,res)=>{
 
     const sql = `SELECT * FROM users WHERE id='${req.params.userid}'`
@@ -43,7 +43,12 @@ router.post('/avatar/:userid',upload.single('avatar'), (req,res)=>{
     // cari user berdasarkan userid
     conn.query(sql, (err,result) => {
         if(err){return res.send({err})}
-        if(result.length === 0) return res.send({err:"user not found"})
+        if(result.length === 0) {
+            fs.unlinkSync(uploadDirectory+'/' + req.file.filename,function(err){
+                if(err) return res.send(err)
+            })
+            return res.send({err:'User not found'})
+        }
         // simpan nama photo yang baru di upadere
         conn.query(sql2, (err,result)=>{
             if(err){return res.send({err})}
@@ -54,6 +59,36 @@ router.post('/avatar/:userid',upload.single('avatar'), (req,res)=>{
 }, (err,req,res,next)=>{
     if(err) return res.send(err)
 })
+
+
+// POst avatar v2
+router.post('/avatarv2/:userid',(req,res,next)=>{
+        // cari user berdasarkan userid
+    const sql = `SELECT * FROM users WHERE id='${req.params.userid}'`
+    conn.query(sql,(err, result) => {
+        if(err){return res.send({err: err.message})}
+        let user = result[0]
+        if(!user) {
+            return res.send({err:'User not found'})
+        }
+        // bisa menambahkan properti baru dalam req
+        req.user = user
+        next()
+    })
+    
+},upload.single('avatar'), (req,res)=>{
+
+    const sql = `UPDATE users SET avatar = '${req.file.filename}' WHERE id = '${req.params.userid}'`
+        // simpan nama photo yang baru di upadere
+        conn.query(sql, (err,result)=>{
+            if(err){return res.send({err})}
+            res.send({filename: req.file.filename})
+        })
+
+}, (err,req,res,next)=>{
+    if(err) return res.send(err)
+})
+
 
 // get Avatar 
 router.get('/avatar/:fileName', (req,res)=>{
@@ -123,8 +158,13 @@ router.get('/users' ,(req,res) => {
 router.patch('/users/:userid', (req,res) => {
     let sql = `UPDATE users SET ? WHERE id = ?`
     let data = [req.body, req.params.userid]
+
+    if(data[0].password){
+        data[0].password = bcryptjs.hashSync(data[0].password, 8)
+    }
+    
     conn.query(sql,data, (err,result) =>{
-        if(err) return res.send(err)
+        if(err) return res.send(err.message)
         res.send(result)
     })
 })
@@ -174,6 +214,23 @@ router.get('/verifivation/:username', (req,res) => {
     conn.query(sql, (err, result)=> {
         if (err) return res.send(err)
         res.send(result)
+    })
+})
+
+// Read Profile
+router.get('/users/profile/:userid', (req,res) =>{
+    let sql = `SELECT * FROM users WHERE id='${req.params.userid}'`
+    conn.query(sql,(err, result)=>{
+        if(err) return res.send({err : err.sqlMessage})
+        
+        let user = result[0]
+
+        if(!user) return res.send({err:'User Not Found'})
+        
+        res.send({
+            ...user,
+            avatar:`http://localhost:2222/avatar/${user.avatar}`
+        })
     })
 })
 
